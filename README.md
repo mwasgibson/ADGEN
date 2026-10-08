@@ -4,12 +4,12 @@ Multi-format display and social banner ad studio with a Swiss industrial aesthet
 
 Paste a product name, description, or URL → synthesize a cohesive campaign → export every standard IAB and social size as PNG, JPEG, or IAB HTML5.
 
-Works **with or without** a Gemini API key. Without a key, AdGen falls back to a deterministic copy engine so the studio stays usable offline or in restricted environments.
+**No API keys required.** Campaign copy is built deterministically from your inputs, scraped page metadata, and creative tone presets.
 
 ## Features
 
 - URL metadata inspection (title, description, OG image, domain)
-- Campaign synthesis (Gemini when configured, deterministic fallback otherwise)
+- Deterministic campaign synthesis from product brief + tone (Swiss Industrial, Editorial, Technical, Luxury)
 - 10 standard formats: Medium Rectangle, Leaderboard, Half Page, Billboard, mobile units, social square & landscape
 - Live canvas preview with zoom, category filters, and image controls
 - Export PNG / JPEG @2x and copy IAB HTML5 bundles
@@ -19,13 +19,13 @@ Works **with or without** a Gemini API key. Without a key, AdGen falls back to a
 ## Requirements
 
 - Node.js 20+
-- Optional: `GEMINI_API_KEY` for AI-authored copy (otherwise deterministic mode)
+- Modern browser
 
 ## Setup
 
 ```bash
 npm install
-cp .env.example .env   # optional — set GEMINI_API_KEY if you have one
+cp .env.example .env   # optional
 npm run dev            # development (Vite + Express on port 3000)
 ```
 
@@ -53,11 +53,9 @@ The Express server serves the API and the static `dist/` SPA on the same port.
 
 | Variable | Required | Meaning |
 |----------|----------|---------|
-| `GEMINI_API_KEY` | No | Enables Gemini campaign synthesis |
-| `GEMINI_MODEL` | No | Override model (default `gemini-2.0-flash`) |
 | `PORT` | No | Server port (default `3000`) |
 | `APP_URL` | No | Public URL for share / deploy metadata |
 
 ## Privacy
 
-Campaign history and uploaded product images stay in the browser (`localStorage` / memory). URL inspection only fetches the page you provide. No telemetry.
+Campaign history and uploaded product images stay in the browser (`localStorage` / memory). URL inspection only fetches the page you provide. No external AI APIs. No telemetry.
