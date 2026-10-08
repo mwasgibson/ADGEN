@@ -11,9 +11,12 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = 3000;
+const PORT = Number(process.env.PORT) || 3000;
 
 app.use(express.json({ limit: "15mb" }));
+app.use(express.urlencoded({ limit: "15mb", extended: true }));
+
+const UA = "AdGen/1.0 (multi-format banner studio)";
 
 function getGenAIClient() {
   const apiKey = process.env.GEMINI_API_KEY;
@@ -24,7 +27,7 @@ function getGenAIClient() {
     apiKey,
     httpOptions: {
       headers: {
-        "User-Agent": "aistudio-build",
+        "User-Agent": UA,
       },
     },
   });
@@ -107,16 +110,16 @@ async function scrapeUrlMetadata(targetUrl: string): Promise<{
 
 function decodeHtmlEntities(str: string): string {
   return str
-    .replace(/&amp;/g, "&")
-    .replace(/&quot;/g, '"')
+    .replace(/&/g, "&")
+    .replace(/"/g, '"')
     .replace(/&#39;/g, "'")
     .replace(/&rsquo;/g, "'")
     .replace(/&ldquo;/g, '"')
     .replace(/&rdquo;/g, '"')
     .replace(/&mdash;/g, "—")
     .replace(/&ndash;/g, "–")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">");
+    .replace(/</g, "<")
+    .replace(/>/g, ">");
 }
 
 function buildDeterministicCampaign(
@@ -148,9 +151,9 @@ function buildDeterministicCampaign(
     priceOrOffer: "FREE EXPRESS SHIPPING",
     ctaText: "Explore Collection",
     headlines: {
-      short: shortHeadline,
-      medium: mediumHeadline,
-      long: longHeadline,
+      short: shortHeadline.slice(0, 22),
+      medium: mediumHeadline.slice(0, 42),
+      long: longHeadline.slice(0, 68),
     },
     subheadline: secondSentence.endsWith(".") ? secondSentence : `${secondSentence}.`,
     valueProps: [
@@ -170,6 +173,14 @@ function buildDeterministicCampaign(
     layoutMotif: "editorial-grid" as const,
   };
 }
+
+app.get("/api/health", (_req, res) => {
+  res.json({
+    ok: true,
+    service: "adgen",
+    geminiConfigured: Boolean(process.env.GEMINI_API_KEY),
+  });
+});
 
 app.post("/api/inspect-url", async (req, res) => {
   try {
@@ -198,6 +209,7 @@ app.post("/api/synthesize-campaign", async (req, res) => {
     return res.json({
       campaign: buildDeterministicCampaign(url, description, productName, scraped),
       scraped,
+      mode: "deterministic",
     });
   }
 
@@ -222,7 +234,7 @@ Strict Creative Rules:
 - Choose an intentional, high-contrast color palette that fits the brand's industrial/luxury/editorial positioning and meets WCAG AA contrast standards.`;
 
     const response = await ai.models.generateContent({
-      model: "gemini-3.8-flash",
+      model: process.env.GEMINI_MODEL || "gemini-2.0-flash",
       contents: prompt,
       config: {
         responseMimeType: "application/json",
@@ -329,12 +341,14 @@ Strict Creative Rules:
     return res.json({
       campaign: parsedCampaign,
       scraped,
+      mode: "gemini",
     });
   } catch (error: any) {
     console.warn("Synthesize fallback triggered:", error?.message);
     return res.json({
       campaign: buildDeterministicCampaign(url, description, productName, scraped),
       scraped,
+      mode: "deterministic-fallback",
     });
   }
 });
