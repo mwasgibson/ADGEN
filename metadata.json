@@ -1,0 +1,8 @@
+{
+  "name": "AdGen",
+  "description": "Instantly generate professional, high-quality banner ads in all standard sizes from your product URL and description.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
